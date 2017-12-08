@@ -100,7 +100,6 @@ def importance(attribute_examples, classified_as):
 
 
 def decision_tree_learning(examples, attributes, attribute_names, parent_examples):
-    plurality_value(examples)
 
     if len(examples) == 0:
         print('No more examples left.')
@@ -175,6 +174,7 @@ def main():
     print(attributes)
 
     final_tree = decision_tree_learning(examples, attributes, column_names[1:], [])
+
 
 if __name__ == '__main__':
     main()
