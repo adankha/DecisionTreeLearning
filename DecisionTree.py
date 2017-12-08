@@ -5,6 +5,11 @@ import numpy as np
 
 
 def same_classification(examples):
+    """
+    Checks to see if all the examples passed in are of the same class. If so, we can conclude an answer.
+    :param examples: Holds the rows from the csv file. Examples used to build our tree.
+    :return:
+    """
 
     classification = examples[0][1]
     total_examples = len(examples[0])
@@ -16,6 +21,12 @@ def same_classification(examples):
 
 
 def plurality_value(examples):
+    """
+    Grabs the classification that wins amongst the examples provided.
+    Aka Selects the most common output value among a set of examples. Ties are random.
+    :param examples: Holds the examples to be evaluated.
+    :return: Returns the classification that won.
+    """
 
     classification_counter = {}
 
@@ -32,6 +43,8 @@ def plurality_value(examples):
 
 def B(q):
     """
+    The entropy of a Boolean (B) random variable.
+
     :param q: Let q be the number of "yes" over the total number for the specific attribute type
     :return: returns the entropy of a Boolean random variable that is true with probability q
     """
@@ -41,9 +54,12 @@ def B(q):
 def importance(attribute_examples, classified_as):
     """
     This will calculate the information gain for the attribute.
-    :param attribute_examples:
-    :param classified_as:
-    :return:
+
+    :param attribute_examples: This is a list of the a single attribute and all the types of that attribute provided
+    by all the examples.
+    So if we are evaluating Rain, it will give a list of len(examples) and list the answers for each example.
+    :param classified_as: Holds the classification chosen for each example.
+    :return: The information gain
     """
 
     attribute_types = {}
@@ -124,9 +140,10 @@ def decision_tree_learning(examples, attributes, attribute_names, parent_example
         print('Winner: ', largest_gain)
 
         tree = [largest_gain[0]]
-
-
-    pass
+        # TODO: for look for values
+        # TODO: Recursive call
+        # TODO: Add branch to tree.
+        return tree
 
 
 def main():
