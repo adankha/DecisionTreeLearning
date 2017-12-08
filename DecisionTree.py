@@ -88,18 +88,18 @@ def importance(attribute_examples, classified_as):
         # Let q be the number of "yes" over the total number for the specific attribute type
         q = float(attribute_types[attr_type][0]) / float(attribute_types[attr_type][1])
 
-        # Check to see if q is greater than 0. Otherwise we cannot take log of 0
-        if q > 0:
-            # Check to see if q-1 is not equal to 0, because B(q) cannot take q - 1 as it will take log of 0.
-            if q - 1 != 0:
-                entropy += p_x * B(q)
+        # Check to see if q and q - 1 is not 0. Otherwise we cannot take log of 0
+        if q != 0 and q - 1 != 0:
+            entropy += p_x * B(q)
 
     information_gain = 1 - entropy
 
     return information_gain
 
 
-def decision_tree_learning(examples, attributes, attribute_names, parent_examples):
+def decision_tree_learning(examples, examples_attributes, attribute_names, parent_examples):
+    print('PRINTING EXAMPLES IN DTL: ', examples)
+    print('printing attr: ', examples_attributes)
 
     if len(examples) == 0:
         print('No more examples left.')
@@ -110,38 +110,69 @@ def decision_tree_learning(examples, attributes, attribute_names, parent_example
         classification = examples[0][1]
         return classification
 
-    elif len(attributes) == 0:
+    elif len(examples_attributes) == 0:
         print('There are no more attributes to evaluate.')
         return plurality_value(examples)
     else:
         A = []
-        total_attributes = len(attributes[0])
+        total_attributes = len(examples_attributes[0])
         total_examples = len(examples)
+        values_map = {}
+
 
         # Traverse through all the attributes for every example.
         for attr in range(total_attributes):
+            current_values = []
             attribute_examples = []
             for example in range(total_examples):
-                attribute_examples.append(attributes[example][attr])
-
+                attribute_examples.append(examples_attributes[example][attr])
+                if examples_attributes[example][attr] not in current_values:
+                    current_values.append(examples_attributes[example][attr])
             # When we reach here, we have traversed through all the examples
             # and have the results for the current attribute stored in the list attribute_examples
 
             # Now we add to A so we can send off the attribute and the result for each example to find the Info. Gain.
-            #print('Result FOR: ', attribute_names[attr])
-            A.append((attribute_names[attr], importance(attribute_examples, examples)))
+            values_map[attribute_names[attr]] = current_values
+            A.append((attr, attribute_names[attr], importance(attribute_examples, examples)))
 
-        largest_gain = ('Place_Holder', -math.inf)
+        largest_gain = ('Place_Holder', 'Place_Holder', -math.inf)
+        print('A: ', A)
         # When I reach here, I want the ARG MAX of the attribute
         for attr in A:
-            if attr[1] > largest_gain[1]:
+            if attr[2] > largest_gain[2]:
                 largest_gain = attr
         print('Winner: ', largest_gain)
-
+        print('Values: ', values_map[largest_gain[1]])
+        print('Attribute is at index: ', largest_gain[0])
         tree = [largest_gain[0]]
-        # TODO: for look for values
+        idx = largest_gain[0]
+        values = values_map[largest_gain[1]]
+        for value in values:
+            exs = []
+            i = 1
+            for example in examples_attributes:
+                if example[idx] == value:
+                    exs.append((i, example))
+                i += 1
+
+            print('Value: ', value, ' For The exs: ')
+            print(exs)
+            print('THE EXAMPLES:')
+            print(examples)
+            new_examples = []
+            new_examp_attr = []
+
+            for i in range(len(exs)):
+                new_examples.append((exs[i][0], examples[exs[i][0] - 1][1]))
+                new_examp_attr.append(exs[i][1])
+            
+            subtree = decision_tree_learning(new_examples, new_examp_attr, attribute_names, examples)
+
+
         # TODO: Recursive call
         # TODO: Add branch to tree.
+
+
         return tree
 
 
