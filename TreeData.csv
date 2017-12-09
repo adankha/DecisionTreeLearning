@@ -1,4 +1,4 @@
-Examples:,Attr: Alt,Attr: Bar,Attr: Fri,Attr: Hun,Attr: Pat,Attr: Price,Attr: Rain,Attr: Res,Attr: Type,Attr: Est,Goal: Will Wait
+Examples:,Attribute: Alternative,Attribute: Bar,Attribute: Friday,Attribute: Hungry,Attribute: Patron,Attribute: Price,Attribute: Rain,Attribute: Reservation,Attribute: Type,Attribute: Estimated_Time,Goal: Will Wait
 1,yes,no,no,yes,some,$$$,no,yes,french,0-10,yes
 2,yes,no,no,yes,full,$,no,no,thai,30-60,no
 3,no,yes,no,no,some,$,no,no,burger,0-10,yes

@@ -1,5 +1,12 @@
-import operator
-from collections import OrderedDict
+"""
+Name: Ashour
+NetID: Adankh2
+Homework 13
+
+The following program is building a tree classifier. More description on the algorithm can be read from the book
+Figure 18.3.5
+
+"""
 
 import pandas as pd
 import math
