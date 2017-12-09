@@ -1,7 +1,8 @@
 import operator
+from collections import OrderedDict
+
 import pandas as pd
 import math
-import numpy as np
 
 
 def same_classification(examples):
@@ -12,7 +13,7 @@ def same_classification(examples):
     """
 
     classification = examples[0][1]
-    total_examples = len(examples[0])
+    total_examples = len(examples)
 
     for i in range(total_examples):
         if examples[i][1] != classification:
@@ -37,7 +38,6 @@ def plurality_value(examples):
             classification_counter[example[1]] += 1
 
     winner = max(classification_counter, key=classification_counter.get)
-
     return winner
 
 
@@ -97,57 +97,76 @@ def importance(attribute_examples, classified_as):
     return information_gain
 
 
-def decision_tree_learning(examples, examples_attributes, attribute_names, parent_examples):
-    print('PRINTING EXAMPLES IN DTL: ', examples)
-    print('printing attr: ', examples_attributes)
+values_map = {}
 
+
+def decision_tree_learning(examples, examples_attributes, attribute_names, parent_examples, is_first):
+    """
+    The learning algorithm shown in the book AIMA 3rd edition, Figure 18.5.
+
+    Note: Variable names here are identical to what is written in the book to stay consistent.
+
+    :param examples: Holds all the examples in a tuple of (example #, classed_as)
+    :param examples_attributes: Holds the "answers" for each examples for all the attributes
+    :param attribute_names: Holds the attribute names
+    :param parent_examples: Holds where examples came from (initially empty list)
+    :param is_first: Checks to see if it's the first call (just for some starting population of maps)
+    :return: Returns the tree with all sub-trees/branches
+    """
+
+    global values_map
+
+    # No more examples
     if len(examples) == 0:
-        print('No more examples left.')
         return plurality_value(parent_examples)
 
+    # Same classification found for all examples, returns random class
     elif same_classification(examples):
-        print('Same classification found for all examples.')
         classification = examples[0][1]
         return classification
 
+    # No more attributes to evaluate, so get the "best value" from the examples.
     elif len(examples_attributes) == 0:
-        print('There are no more attributes to evaluate.')
         return plurality_value(examples)
     else:
+        # A will hold all the attributes and their Information Gain at the current level of the tree.
         A = []
+
+        # Self explanatory variables
         total_attributes = len(examples_attributes[0])
         total_examples = len(examples)
-        values_map = {}
-
 
         # Traverse through all the attributes for every example.
         for attr in range(total_attributes):
             current_values = []
             attribute_examples = []
+
+            # Traverse through all the the examples and store all the results for the current attribute
             for example in range(total_examples):
                 attribute_examples.append(examples_attributes[example][attr])
                 if examples_attributes[example][attr] not in current_values:
                     current_values.append(examples_attributes[example][attr])
+
             # When we reach here, we have traversed through all the examples
-            # and have the results for the current attribute stored in the list attribute_examples
-
+            # and have the results for the current attribute stored in the list attribute_example
+            if is_first:
+                values_map[attribute_names[attr]] = current_values
             # Now we add to A so we can send off the attribute and the result for each example to find the Info. Gain.
-            values_map[attribute_names[attr]] = current_values
             A.append((attr, attribute_names[attr], importance(attribute_examples, examples)))
-
         largest_gain = ('Place_Holder', 'Place_Holder', -math.inf)
-        print('A: ', A)
+
         # When I reach here, I want the ARG MAX of the attribute
         for attr in A:
             if attr[2] > largest_gain[2]:
                 largest_gain = attr
-        print('Winner: ', largest_gain)
-        print('Values: ', values_map[largest_gain[1]])
-        print('Attribute is at index: ', largest_gain[0])
-        tree = [largest_gain[0]]
+
+        # Tree now holds the attribute that is "most important" aka highest information gain.
+        tree = [(largest_gain[0], largest_gain[1])]
         idx = largest_gain[0]
         values = values_map[largest_gain[1]]
+
         for value in values:
+
             exs = []
             i = 1
             for example in examples_attributes:
@@ -155,25 +174,36 @@ def decision_tree_learning(examples, examples_attributes, attribute_names, paren
                     exs.append((i, example))
                 i += 1
 
-            print('Value: ', value, ' For The exs: ')
-            print(exs)
-            print('THE EXAMPLES:')
-            print(examples)
             new_examples = []
             new_examp_attr = []
 
             for i in range(len(exs)):
                 new_examples.append((exs[i][0], examples[exs[i][0] - 1][1]))
                 new_examp_attr.append(exs[i][1])
-            
-            subtree = decision_tree_learning(new_examples, new_examp_attr, attribute_names, examples)
-
-
-        # TODO: Recursive call
-        # TODO: Add branch to tree.
-
+            subtree = decision_tree_learning(new_examples, new_examp_attr, attribute_names, examples, False)
+            tree.append(((largest_gain[1] + ', Type: ' + value), subtree))
 
         return tree
+
+
+def print_tree(final_tree):
+    """
+    Self explanatory. This prints the tree. Essentially what it does is it prints the leaf nodes first.
+    :param final_tree: Holds the tree that is still left to be printed
+    :return:
+    """
+    print_later = []
+    for i in final_tree:
+        if 'Attribute:' in i[1]:
+            print(i[0], i[1])
+        elif 'yes' in i[1] or 'no' in i[1]:
+            print(i[0] + ', Decision:', i[1])
+        else:
+            print_later.append((i[0], i[1]))
+
+    for i in print_later:
+        print(i[0], ' Decision: -->')
+        print_tree(i[1])
 
 
 def main():
@@ -182,7 +212,7 @@ def main():
 
     tree_file = pd.read_csv(file_name, header=0)
     column_names = list(tree_file.columns.values)
-    print(column_names)
+    # print(column_names)
 
     # The list examples holds the example and the classification of that example
     examples_as_matrix = tree_file[column_names[0]].as_matrix()
@@ -199,12 +229,21 @@ def main():
         examples.append((i, k))
         attributes.append(list(j))
 
-    print('Printing Examples:')
-    print(examples)
-    print('Printing Attributes:')
-    print(attributes)
+    # print('Printing Examples:')
+    # print(examples)
+    #
+    # print('Printing Attributes:')
+    # print(attributes)
 
-    final_tree = decision_tree_learning(examples, attributes, column_names[1:], [])
+    final_tree = decision_tree_learning(examples, attributes, column_names[1:], [], True)
+
+    # print('THE FINAL TREE:')
+    # print(final_tree)
+    print_tree(final_tree)
+
+    print('\nThe arrows in the text printed above show the new attribute to take down the '
+          'tree if that attribute type has been chosen.')
+    print('The following program uses the example provided in the book to help illustrate my algorithm.')
 
 
 if __name__ == '__main__':
